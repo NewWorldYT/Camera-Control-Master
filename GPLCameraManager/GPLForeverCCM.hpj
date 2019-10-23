@@ -1,0 +1,55 @@
+[Options]
+OPTCDROM=0
+COMPRESS=1
+OLDKEYPHRASE=0
+COPYRIGHT=Copyright Peter v/d Burgh (GPLForever)
+DEFFONT=Arial,8,0
+ERRORLOG=GPLForeverCCMHelp.err
+CONTENTS=HelpContents1
+ROOT=C:\Mijn documenten\CCMhelp2\CCMHelp
+TITLE=GPLForever Camera Control Master Help File V2
+REPORT=ON
+HLP=GPLForeverCCM.hlp
+BMROOT=.\BITMAPS
+[WINDOWS]
+Main="GPLForever Camera Control Master Help File V2",(50,60,580,640),29188,(r14876671),(r12632256),f0
+Proc="How to...",(653,102,360,600),20736,(r14876671),(r12632256),f3 ;Default window for displaying procedural information
+[FILES]
+GPLForeverCCMHelp.rtf
+[CONFIG]
+BrowseButtons()
+CreateButton("jump_glossary","&Woordenlijst","JumpId(`GPLForeverCCM.hlp>Main',`GlossaryOfTerms.D2H')")
+[MAP]
+HelpContents1=1    ; Help Contents
+Overview=2    ; Overview
+BeforeFirstUse.Preferences=16    ; Before First Use: Preferences
+CCMKeyAssignments=12    ; CCM Key Assignments
+GPLKeyAssignments=13    ; GPL Key Assignments
+ManagingCameraSets=3    ; Managing Camera Sets
+DirectCameraControl=4    ; Direct Camera Control
+MakingMovies=5    ; Making Movies
+HowtouseandcreateEffects=6    ; How to use and create Effects
+Usingthescriptlanguage=7    ; Using the script language
+Languagebasics=8    ; Language basics
+Tips=9    ; Tips
+Introduction2=17    ; Menu's and Commands - Introduction
+File=10    ; File
+New.Open.Close=18    ; New / Open / Close
+Save=19    ; Save
+Import.Exportcamfile=20    ; Import / Export camfile
+Set=21    ; Set
+New.Delete.Rename=22    ; New / Delete / Rename
+Copy.Cut.Paste=23    ; Copy / Cut / Paste
+Distribute=24    ; Distribute
+Camera=25    ; Camera
+Copy.Paste=26    ; Copy / Paste
+Properties=27    ; Properties
+Extra=28    ; Extra
+Showsavedpositions=29    ; Show saved positions
+Preferences=30    ; Preferences
+Help=31    ; Help
+GPLForeverCCMHelp=32    ; GPLForever CCM Help
+GettingStartedDialog=33    ; Getting Started Dialog
+About=34    ; About
+Troubleshootingoptions=35    ; Troubleshooting options
+GlossaryOfTerms.D2H=15    ; Glossary of Terms

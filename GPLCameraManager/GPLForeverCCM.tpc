@@ -1,0 +1,601 @@
+%RICH_TEXT%
+%TITLE%
+GPLForever Car Camera Manager
+%COPYRIGHT%
+Peter van der Burg
+%DEFAULT%
+Overview
+%COMPONENT%
+About
+%OVERVIEW%
+About dialog\par
+%DESCRIPTION%
+Shows the about dialog containing creators information.\par
+%COMPONENT%
+cam file
+%OVERVIEW%
+.cam file format\par
+%DESCRIPTION%
+A .cam file is an original GPL file for storing one set of car cameras. This files are normally located in the cars/cars67 directory of GPL.\par
+%COMPONENT%
+Camera Copy
+%OVERVIEW%
+Copy selected camera\par
+%DESCRIPTION%
+Copy the selected camera values and images.\par
+%COMPONENT%
+Camera Paste
+%OVERVIEW%
+Paste into selected camera set\par
+%DESCRIPTION%
+Paste the previously copied camera values and image into the selected camera.\par
+%COMPONENT%
+Camera Properties
+%OVERVIEW%
+Properties of selected camera\par
+%DESCRIPTION%
+View or edit the properties of the selected camera. Properties that can be changed are \i name,\i0  \i image\i0  and the \i camera coordinates\i0 .\par
+\par
+The \i name \i0 and \i image \i0 are optional properties. The image file must be jpeg format. The selected image will be stretched but the preferred size is 160x95 for an exact fit. The image file is embedded in the \cf13\ul\protect cmf file\cf0\ulnone\protect0  so it is not necessary to keep the original image file.\par
+%JUMP_LINKS%
+.cmf file	.cmf file
+cmf file	cmf file
+%COMPONENT%
+CCM key assignments
+%OVERVIEW%
+CCM key assignments\par
+%DESCRIPTION%
+In CCM the following keys are assigned to control cameras and functionality during GPL replay. Also read \cf13\ul\protect Mouse control\cf0\ulnone\protect0  for a better understanding.\par
+\par
+The following key assignments are used for choosing modes and cameras:\par
+\pard\li200\sb100\sa100\i PgUp/PgDn.\i0\tab\tab Next camset/prev camset.\par
+\i Ctrl-PgUp/Ctrl-PgDn\i0 .\tab Next effect/prev effect.\par
+\i Insert\i0\tab . \tab\tab Mouse control roll bar camera.\par
+\i Ctrl-Insert.\i0  \tab\tab Activates effect on roll bar camera.\par
+\i Delete. \tab\tab\i0 Mouse control pit camera.\par
+\i Ctrl-Delete.\i0  \tab\tab Activates effect on pit camera.\par
+\i Home\tab . \tab\tab\i0 Reset to original position after mouse control or effect is started.\par
+\i End. \tab\tab\tab\i0 Static mode (ends mouse control or effect)Insert, activates mouse control for roll-bar (so select roll-bar first).\par
+\i S.\i0\tab\tab\tab Toggle single step mode. \fs24\par
+\i\fs20 R.\i0\tab\tab\tab Save current roll bar camera position. \fs24\par
+\i\fs20 P.\i0\tab\tab\tab Save current pit camera position.\par
+\i L\i0 .\tab\tab\tab Toggle Look/Fly mode.\par
+\i B\i0 .\tab\tab\tab Toggle Auto Bank mode.\par
+\i 1/2\i0 .\tab\tab\tab Increase/Decrease speed of key driven movement.\par
+\i 3/4\i0 .\tab\tab\tab Increase/Decrease smoothing of movements.\fs24\par
+\fs20\par
+\pard\sb100\sa100 The following key (and mouse) assignment are used to control cameras:\par
+   \i Mouse Up/Down.\i0\tab\tab Forward/Backward in x/y plane or Pitch Up/Down. (see L key) \par
+   \i Mouse Left/Right.\i0\tab\tab Turn Left/Right in x/y plane. It automatically banks if selected. (see B key)\par
+\pard\li200\sb100\sa100\i Up/Down\i0 .\tab\tab\tab Pitch Up/Down or Forward/Backward in x/y plane. (see L key) \par
+\i Mouse Left/Right button\i0 .\tab Move Down/Up in z-direction\fs24 .\par
+\i\fs20 Left/Right.\i0  \tab\tab\tab Strafe Left/Right.\fs24\par
+\i\fs20 D/F\i0\tab\tab\tab\tab Change bank angle of camera\fs24 .\par
+\i\fs20 -/+ (num-pad)\i0\tab\tab\tab Zoom out/in\fs24  \par
+\par
+%COMPONENT%
+cmf file
+%OVERVIEW%
+.cmf file format\par
+%DESCRIPTION%
+A .cmf file can contain one or several camera sets including the images. Also the effects are stored in this format.\par
+%COMPONENT%
+Direct Control
+%OVERVIEW%
+ Direct Control the cameras\par
+%DESCRIPTION%
+Direct Control is the capability to directly control car camera's during replay in GPL. There is no need to change .cam files in the cars/cars67 directory of GPL. But it is necessary to have at least one .cam file in the cars directory. Otherwise direct control will not work. Use therefore the \cf13\ul\protect Set Distribute\cf0\ulnone\protect0  .\par
+\par
+Direct Control takes place with hotkeys. A full list of hotkeys is specified in \cf13\ul\protect CCM key assignments\cf0\ulnone\protect0  and also GPL itself uses hotkeys specified in  For specific car camera set selection the user can specify his own hotkeys using the \cf13\ul\protect Set Properties\cf0\ulnone\protect0  .\par
+\par
+Direct Control is enabled on the main tab page. The main tab page furthermore contains the the following Direct Control settings to do initial settings for some parameters that also can be controlled during replay:\par
+\pard\li200\sa80\i Key Control Speed\i0\tab Sets the initial speed of movement when keys are used. (1/2 key during replay)\par
+\i Smooting\tab\i0\tab Sets the initial smoothing on movement. (3/4 key during replay)\par
+\i Look mode\tab\i0\tab Sets the initial mouse mode, look or fly. (L key toggles during replay)\par
+\i Key Control Speed\i0\tab Sets the initial mode of banking, auto or manual (B key toggles during replay)\par
+\pard\sa80 Read more about this parameters in \cf13\ul\protect Mouse Control\cf0\ulnone\protect0  and \cf13\ul\protect CCM key assignments\cf0\ulnone\protect0  .\tab\tab\par
+\par
+Direct Control is activated when during a replay one of the hotkeys is pressed. As soon as Direct Control is active a status line appears in the upper left corner of the GPL screen. The status line is also visible in the lower left corner of CCM but can of course only be seen when GPL is running in windowed mode. The status line represents the current camera modes, car camera set, effect and single step mode.\par
+\par
+The five camera modes are:\par
+\pard\li200\sa80\i Static\i0 , \tab\tab Regular GPL static camera mode. (\i End\i0 )\par
+\i Roll bar mouse\i0 ,\tab\cf13\ul\protect Mouse control\cf0\ulnone\protect0  is active on the roll bar camera. (\i Insert\i0 )\par
+\i Roll bar effect\i0 ,\tab\cf13\ul\protect Effect\cf0\ulnone\protect0  is active on the roll bar camera. (\i Ctrl-Insert\i0 )\par
+\i Pitcam mouse\i0 , \tab Mouse control is active on the pit camera. (\i Delete\i0 )\par
+\i Pitcam effect\i0 , \tab Effect is active on the pit camera. (\i Ctrl-Delete\i0 )\par
+\par
+\pard\sa80 Car camera set switching is done by \i PgUp/PgDn\i0  and effect switching is done by \i Ctrl-PgUp/Ctrl-PgDn\i0 . The car camera sets and effects are taken from the last selected file in the CCM.\par
+\par
+To be able to make smooth movies it is necessary to put CCM in single step mode. This is done by toggling the \i S\i0  key. Read more about movies in the topic: \cf13\ul\protect Making Movies\cf0\ulnone\protect0  .\par
+\par
+It is possible to save the Roll Bar camera position and the Pit camera position with the \i R\i0  key and the \i P\i0  key. Read this in the topic: \cf13\ul\protect Save camera position\cf0\ulnone\protect0  .\par
+\pard\par
+\par
+%JUMP_LINKS%
+CCM key assignments	CCM key assignments
+Effect	Effects
+GPL key assignments	GPL key assignments
+Making movies	Making Movies
+Mouse control	Mouse Control
+Save camera position	Save camera position
+Set Distribute	Set Distribute
+Set Distribution	Set Distribution
+Set Properties	Set Properties
+%COMPONENT%
+Effects
+%OVERVIEW%
+ Creating effects and using the script language.\par
+%DESCRIPTION%
+This page is written by Niko Stenberg. He has been beta tester for V3.0 and created a list of amazing effects. I included this effects in the default.cmf which is part of the installation. \par
+\par
+\b\fs28 GENERAL\caps\par
+\b0\i\caps0\fs20 Camera Control Master\i0  gives you the possibility to make effects changing camera behaviour automatically. To allow for this, \i CCM\i0  comes with an expression parser. The effect scripts written will be executed run-time.\par
+\par
+\par
+\b\fs28 CREATING AN EFFECT\par
+\b0\fs20 To create a new camera effect select \ldblquote Set\rdblquote  -> \ldblquote New\rdblquote .  This opens a popup, from which you select the \ldblquote Effect\rdblquote  - radio button and enter a name for your effect. In the current library you should now see your effect, effects are denoted with a small yellow rollbar. To enter the script highlight the effect, and click \ldblquote Edit\rdblquote . This opens the effect editor. Edit your script here, and click \ldblquote Ok\rdblquote  to keep the changes and to validate the script, or \ldblquote Cancel\rdblquote  to discard them. Should there be errors in the script, a popup comes up describing the error that should be corrected.\par
+\par
+\par
+\b\fs28 USING THE SCRIPT LANGUAGE\par
+\b0\fs20 The script language conforms basically to the rules of \i Pascal\i0 . The basics are described here in the scope relevant to changing camera behaviour. If you know Pascal you can try different things, but they probably won\rquote t add anything too useful. Defining scripts is all about manipulating camera coordinates and orientation.\par
+\par
+\b Coordinate space\par
+\b0 The camera parameters define a three-dimensional location and orientation, that are relevant either to the car, or the track:\par
+\pard\fi-360\li720\tx720\f1\'b7\f1\tab\f0 in Rollbar-mode the coordinate-space is defined relative to the car. The origin is in the middle of the car (about where the driver sits), on ground-level. The cars nose always points to the positive x-axis, positive y-axis is directly to the left of the car, and positive z-axis directly up of the car. Thus, when the car moves, \ul so does the coordinate space\ulnone .\b\par
+\pard\fi-360\li720\b0\f1\'b7\f1\tab\f0 In Pitcam-mode the coordinate space is fixed to the track. The camera space then fully depends on the way the track is built to the space. Here the camera\rquote s coordinate space will constantly be the same, but it\rquote s difficult to use absolute coordinates. (See tips.)\b\par
+\pard\b0 The coordinate units correspond quite well to meters, i.e. 1 unit is 1 meter. That can be helpful to get an idea, what kind of radii to use and so on.\par
+\par
+\b\ldblquote Built in\rdblquote  variables\par
+\b0 There are certain variables, which are always defined in the script space. The variables are:\par
+\pard\fi-360\li720\tx720\f1\'b7\f1\tab\f3 X\f0  - x-position of the camera\par
+\pard\fi-360\li720\f1\'b7\f1\tab\f3 Y\f0  - y-position of the camera\par
+\f1\'b7\f1\tab\f3 Z\f0  - z-position of the camera\par
+\f1\'b7\f1\tab\f3 Yaw\f0  - yaw of the camera (rotation around z-axis)\par
+\f1\'b7\f1\tab\f3 Pitch\f0  - pitch of the camera (rotation around y-axis)\par
+\f1\'b7\f1\tab\f3 Bank\f0  - banking of the camera (rotation around x-axis)\par
+\f1\'b7\f1\tab\f3 Zoom\f0  - cameras zoom (actually the fov angle)\par
+\f1\'b7\f1\tab\f3 frames\f0  - the amount of frames shown since starting of the script.\par
+\pard Also a very handy constant is always available, pi (=180 degrees).\par
+\par
+\b Execution\par
+\b0 The script execution is started, when you press \i Ctrl-Insert\i0  (Rollbar effect) or\i  Ctrl-Delete\i0  (Pitcam effect). Whenever the script is started, \f3 frames\f0  is set to 1. Then the script is fully executed every time gpl refreshes the screen in \i normal-mode\i0 , or ,if in \i single-step -mode, \i0  every time the replay advances. But always once, when started. After executing a script cycle, \f3 frames\f0  is incremented. However, if the machine is under a lot of stress, the script might not have time to be executed, as CCM tries not to hinder gpl\rquote s performance. Then the camera motion might get choppy.\par
+\par
+\par
+\b\fs28 LANGUAGE BASICS\par
+\b0\fs20 The language is basically Pascal, fitted to the context. People with even a little programming experience should find it easy, but it\rquote s simple enough for anyone to get a hang of, and define their own effects.\par
+The scripts consist of statements and expressions. Logical behaviour is controlled by if-clauses, which evaluate expressions.\par
+\par
+\pard\fi-360\li720\tx720\f1\'b7\f1\tab\f0 A statement is generally of the form: \f3 variable := expression;\f0  \par
+\pard\fi-360\li1440\tx1440\f3 o\tab\f0 The \f3 := \f0 denotes assignment, The value of the \f3 expression\f0  is assigned to the \f3 variable.\f0  The left hand side must always be a variable. If a variable with that name doesn\rquote t exist, it is declared here. The right hand side can be an expression, another variable, or a constant value. \par
+\pard\fi-360\li1440\f3 o\tab\f0 Statements must end with a semicolon \lquote\f3 ;\f0\rquote .\par
+\f3 o\tab\f0 The statement of form \f3 variable;\f0  is valid, it declares a variable with the given name and initialises it with value \f3 0\f0 .\par
+\pard\par
+\pard\fi-360\li720\tx720\f1\'b7\f1\tab\f0 A variable can have any alphanumeric name, but it must begin with an alphabet. The names are not case-sensitive, so \f3 speed=SPEED=sPeEd\f0 . Variables can (in this context) have a numerical value or a boolean value (\f3 TRUE\f0  or \f3 FALSE\f0 ).\par
+\pard\fi-360\li1440\tx1440\f3 o\tab\f0 The numerical values can be integers (like \f3 5\f0 ), floating point (like \f3 0.48\f0 ), or scientific (like \f3 1.8e5\f0 , which means \f3 1.8*10^5\f0 , or \f3 1.8*100000\f0 ).\par
+\pard\fi-360\li1440\f3 o\tab\f0 In floating point and scientific numbers the decimal separator is always a decimal point \lquote\f3 .\f0\rquote  .\par
+\pard\par
+\pard\fi-360\li720\tx720\f1\'b7\f1\tab\f0 Expressions may consist of variables, constant values, operations and functions.\par
+\pard\par
+\pard\fi-360\li720\tx720\f1\'b7\f1\tab\f0 You can control logic with the following structure: \f3 if (logical expression) then first statement(s) [else other statement(s)];\f0\par
+\pard\fi-360\li1440\tx1440\f3 o\tab\f0 The first statement(s) are evaluated if the logical expression is true\par
+\pard\fi-360\li1440\f3 o\tab\f0 The \f3 else\f0  is optional and the second statement(s) are evaluated if the logical expression is false.\par
+\f3 o\tab\f0 Multiple statements can be defined in a \f3 begin\f0  - \f3 end;\f0  -block, like this:\par
+\pard\li1440\f3 if (expression) then\par
+begin\par
+  statement;\par
+  statement;\par
+end;\f0\par
+\par
+or\par
+\par
+\f3 if (expression) then\par
+begin\par
+  statement;\par
+  statement;\par
+end\par
+else\par
+begin\par
+  statement;\par
+  statement;\par
+end;\par
+\f0\par
+Note the \f3 end\f0  missing the semicolon before the \f3 else\f0 .\par
+\pard\par
+\b Operations\par
+\pard\fi-360\li720\tx720\b0\f1\'b7\f1\tab\f0 Arithmetical\par
+\pard\fi-360\li1440\tx1440\f3 o\tab +\f0 , \f3 -\f0 , \f3 *\f0 , \f3 /\f0\par
+\pard\fi-360\li1440\f3 o\tab div\f0  - integer division\par
+\f3 o\tab mod\f0  - modulo\par
+\f3 o\tab ^\f0  - power of\par
+\f3 o\tab -\f0  - negate\par
+\pard\fi-360\li720\tx720\f1\'b7\f1\tab\f0 Logical\par
+\pard\fi-360\li1440\tx1440\f3 o\tab <\f0 , \f3 <=\f0 , \f3 >=\f0 , \f3 >\f0 , \f3 <>\f0 , \f3 =\f0 ;\par
+\pard\fi-360\li1440\f3 o\tab and\f0 , \f3 or\f0 , \f3 xor\f0 , \f3 not\f0 ;\par
+\pard\fi-360\li720\tx720\f1\'b7\f1\tab\f0 Bitwise\par
+\pard\fi-360\li1440\tx1440\f3 o\tab and\f0 , \f3 or\f0 , \f3 xor\f0 ;\par
+\pard\fi-360\li1440\f3 o\tab ~\f0  - negate;\par
+\pard\par
+\b Most usable  functions\par
+\par
+\pard\fi-360\li720\tx720\b0\f1\'b7\f1\tab\f0 Arithmetic\par
+\pard\fi-360\li1440\tx1440\f3 o\tab ABS(X)\f0\tab\tab absolute value\par
+\pard\fi-360\li1440\f3 o\tab SQR(X)\tab\tab\f0 square = \f3 X^2\f0  = \f3 X*X\f0\par
+\f3 o\tab SQRT(X)\f0\tab\tab square root\par
+\f3 o\tab SIGN(X)\f0\tab\tab sign of \f3 X\f0 ; =\f3 1\f0  for \f3 X>0\f0 , =\f3 0\f0  for \f3 X=0\f0 , =\f3 -1\f0  for \f3 X<0\f0\par
+\f3 o\tab TRUNC(X)=INT(X)\f0\tab integer part\par
+\f3 o\tab FRAC(X)\f0\tab\tab fractional part\par
+\f3 o\tab ROUND(X)\f0\tab\tab rounds \f3 X\f0  to the nearest integer value\par
+\f3 o\tab CEIL(X)\f0\tab\tab always returns "ceil" integer value\par
+\f3 o\tab FLOOR(X)\f0\tab\tab always returns "floor" integer value\par
+\f3 o\tab ARG(X,Y)\f0\tab\tab argument(phase) of \f3 X\f0  and \f3 Y\f0\par
+\f3 o\tab RADIUS(X,Y)\f0\tab  \tab 2-dimesional radius =\f3 SQRT(SQR(X)+SQR(Y))\par
+o\tab POWER(X,Y)\f0  \tab\tab raises \f3 X\f0  to a power of \f3 Y\f0  (\f3 Y\f0  is a floating point value)\par
+\f3 o\tab IPOWER(X,Y)\tab\f0\tab raises \f3 X\f0  to a power of \f3 Y\f0  (\f3 Y\f0  is a integer value) \par
+\f3 o\tab X^Y\f0  \tab\tab\tab raises \f3 X\f0  to a power of \f3 Y\f0  (same as above two functions)\par
+\pard\fi-360\li720\tx720\f1\'b7\f1\tab\f0 Exponential / logarithmic\par
+\pard\fi-360\li1440\tx1440\f3 o\tab EXP(X)\tab\f0\tab exponent\par
+\pard\fi-360\li1440\f3 o\tab LN(X)\f0\tab\tab\tab natural logarithm\par
+\f3 o\tab LG(X)\f0\tab\tab\tab decimal logarithm\par
+\f3 o\tab LOG(X)\f0\tab\tab base 2 logarithm\par
+\pard\fi-360\li720\tx720\f1\'b7\f1\tab\f0 Trigonometric\par
+\pard\fi-360\li1440\tx1440\lang1035\f3 o\tab SIN(X)\f0\tab\tab sine\par
+\pard\fi-360\li1440\f3 o\tab COS(X)\f0\tab\tab cosine\par
+\f3 o\tab TAN(X)\f0\tab\tab tangent\par
+\f3 o\tab COTAN(X)\f0\tab\tab cotangent\par
+\f3 o\tab ASIN(X)\f0\tab\tab arcsine\par
+\f3 o\tab ACOS(X)\f0\tab\tab arccosine\par
+\f3 o\tab ATAN(X)\f0\tab\tab arctangent\par
+\f3 o\tab SINH(X)\f0\tab\tab hyperbolic sine\par
+\f3 o\tab COSH(X)\f0\tab\tab hyperbolic cosine\par
+\f3 o\tab TANH(X)\f0\tab\tab hyperbolic tangent\par
+\pard\li720 Also see \f3 ARG(X,Y)\f0  from arithmetic functions.\par
+\pard\par
+\b\fs24\par
+\fs28 A SIMPLE EXAMPLE\par
+\b0\fs20 Here\rquote s quite a simple script, that reads in the original \f3 Yaw\f0  when the script is started (\f3 frames = 1\f0 ). Then the camera rotates (\f3 Yaw\f0  is changed) for a period of 10 seconds (\f3 frames < 10*fps)\f0 .\par
+ \par
+\f3 if (frames = 1) then\par
+begin\par
+  yawo:=Yaw;\par
+  fps:=36;\par
+  speed:=0.25;\par
+  factor:=speed*2*PI/fps;\par
+end;\par
+\par
+if (frames > 1 and frames < 10*fps) then\par
+  Yaw:= yawo-frames*factor;\par
+\par
+\f0\par
+\b\fs28 TIPS\par
+\b0\fs20 Here are some ideas to consider when creating your effects:\par
+\par
+\b Initialization\par
+\b0 The camera parameters are not initialized to any given values automatically. Initialization should be done like in the given example, when \f3 (frames = 1)\f0 . That way you ensure, that your script behaves consistently. However, be sure you really want to change the values. See the next tip.\par
+\par
+\b Coordinate spaces\par
+\b0 Using absolute coordinates is only feasible using the Rollbar-camera. That\rquote s when you have at least some knowledge of where the camera will be located. That is not the case with the Pitcam, however. It\rquote s a good idea - especially with the Pitcam - to read in the initial camera parameters, and use them as a reference. Move the camera in it\rquote s own space and apply that information to the reference parameters. This way, you can create \ldblquote relative\rdblquote  motion for the camera, which is probably what you always want when using the Pitcam, but often with the Rollbar also. Remember, that a camera parameter is not changed, unless you do it.\par
+\par
+\b Limited, sequential and continuous motion\par
+\b0 You can set limits according to which the camera should move. In the example above, the camera will rotate for ten seconds. After that it won\rquote t move.\par
+\f0 You can set as many different if blocks to perform sequential movement, for example between 0-5 seconds move forward, between 5-10 seconds move right, between 10-15 seconds move back\'85 or anyway you want, the limiting factor can be almost anything. Be sure, however, not to include the same condition twice to avoid surprises. \f0\par
+You can also easily achieve continuous motion by using cyclic functions, like sine and cosine. You can use the \f3 frames\f0  when providing phase to those functions, and thus ensure smooth continuous motion for the camera.\par
+\par
+\b Other good conventions\par
+\b0 It\rquote s a good idea to parametrize some of the camera properties as high up in the hierarchy as possible. That way, if you - or indeed someone else - want to change something just a bit, you can easily change the value of some variable. Again, as in the above example, the speed is defined as rotations per second. If you want to speed it up, just increase the value. Also it\rquote s worth considering to keep the frame rate in mind, when creating effects. For example someone might want to use the effect while capturing a movie, then the frame rate might not be the default 36.\par
+\par
+Remember, especially when sharing your libraries with others, to use descriptive variable names. The script is then much easier to read / modify, when you know what does what, judging from the name. People will most probably want to just change something. Also use descriptive names for the effects themselves. That way it\rquote s easier for people to use them.\par
+\par
+Try to keep things simple. Not because of performance being a problem, but because it\rquote\f0 s better to have many scripts doing simple, universally applicable things, than to have one script that does it all if you wait long enough\'85\f0\par
+\par
+\b The most common problems\par
+\pard\fi-360\li720\tx720\b0\f1\'b7\f1\tab\f0 If you edit your script in some other editor, and paste it into the CCM one, be sure to not have tabs in the code. When indenting, use spaces. The editor doesn\rquote t see the tabs as whitespace, but special characters, and you\rquote ll get error messages that look like there\rquote s nothing wrong.\par
+\pard\fi-360\li720\f1\'b7\f1\tab\f0 Always remember to end statements with semicolon, but\'85\f0\par
+\f1\'b7\f1\tab\f0\'85Remember, that the statement before \f3 else\f0  must not have the semicolon.\par
+\f1\'b7\f1\tab\f0 When using camera specific coordinates, the further you go from the car in the XY-plane, the more probably you will at some point end up below ground, resulting in static.\par
+\f1\'b7\f1\tab\f0 Don\rquote t use absolute coordinates with Pitcam.\par
+\f1\'b7\f1\tab\f0 The \f3 Zoom\f0  is the cameras field of view. So the applicable range is from 0(excluding) to PI.\par
+\f1\'b7\f1\tab\f0 The angles are presented in radians, so 180 degrees = PI ~ 3.14159.\par
+\f1\'b7\f1\tab\f0 It\rquote\f0 s not a bad idea to blow the dust off your trigonometry book\'85 :)\f0\par
+%COMPONENT%
+Exit
+%OVERVIEW%
+Exit from Car Camera Manager\par
+%DESCRIPTION%
+Exits from Car Camara Manager. If changes are made it is asked to save the changes. \par
+%COMPONENT%
+Export GPL camfile
+%OVERVIEW%
+Export GPL \cf13\ul\protect cam file\cf0\ulnone\protect0  \par
+%DESCRIPTION%
+Export the values from the current camera set into a \cf13\ul\protect cam file\cf0\ulnone\protect0  .\par
+\par
+This function is mostly used when you want to change the values of  car camera set with a .cam file editor. The current car camera set is the exported with this function, edited and then imported again with the \cf13\ul\protect Import GPL camfile\cf0\ulnone\protect0  function.\par
+%JUMP_LINKS%
+.cam file	.cam file
+cam file	cam file
+Import GPL camfile	Import GPL camfile
+%COMPONENT%
+File Close
+%OVERVIEW%
+Close current file \par
+%DESCRIPTION%
+The current  \cf13\ul\protect .cmf\cf0\ulnone\protect0  is closed. If something is changed first it is asked to save the changes.\par
+\par
+\par
+%JUMP_LINKS%
+.cmf file	.cmf file
+cmf file	cmf file
+%COMPONENT%
+File New
+%OVERVIEW%
+Create a new file\par
+%DESCRIPTION%
+A new  \cf13\ul\protect .cmf\cf0\ulnone\protect0  is created.\par
+\par
+%JUMP_LINKS%
+.cmf	cmf file
+%COMPONENT%
+File Open
+%OVERVIEW%
+ Open an existing file.\par
+%DESCRIPTION%
+Opens an existing \cf13\ul\protect .cmf\cf0\ulnone\protect0  file.\par
+%JUMP_LINKS%
+.cmf	cmf file
+.cmf file	.cmf file
+cmf file	cmf file
+%COMPONENT%
+File Save
+%OVERVIEW%
+ Save to file.\par
+%DESCRIPTION%
+The current \cf13\ul\protect .cmf\cf0\ulnone\protect0  is saved\par
+%JUMP_LINKS%
+Editing	Editing
+Import	Import
+%COMPONENT%
+File Save As
+%OVERVIEW%
+ Save to other file\par
+%DESCRIPTION%
+The current \cf13\ul\protect .cmf\cf0\ulnone\protect0  is saved with a different name.\par
+\par
+%COMPONENT%
+Getting Started Dialog
+%OVERVIEW%
+ Shows Getting Started Dialog\par
+%DESCRIPTION%
+ Shows the getting started dialog, which is shown at first run.\par
+%COMPONENT%
+GPL key assignments
+%OVERVIEW%
+GPL built-in keys\par
+%DESCRIPTION%
+In GPL itself there are also a set of hotkeys defined. The following list shows the built-in keys:\par
+\par
+\pard\li200\i Ctrl-J\i0  is trapped in standard GPL. If you press it first, before pressing any other control keys, it has the effect of cycling through the cams (like you have PgUp & PgDown doing), BUT, once you've used other keys (see later) if reverts to a freeze/un-freeze trigger. \par
+\par
+\i Ctrl-[\i0  is trapped in standard GPL and exits the replay. \par
+\par
+\i Ctrl-4\i0  (numeric pad) - This takes you back to the start of Qual or Race depending where you are in the replay. i.e. if you are on lap 4 of the race, press Ctrl-4 adn it takes you back to the grid start.\par
+\par
+\i Ctrl-6\i0  (numeric pad) does the same as above but goes forwards in the replay.\par
+\par
+\i Ctrl-Enter\i0  (keypad) - freeze/un-freeze (at same place).\par
+\par
+\i DEL\i0  (keypad) - freezes the action, on restart goes to end of replay.\par
+\par
+\i 4\i0  (keypad) - step back 1 frame at a time (while held) - let go and replay continues at normal speed.\par
+\par
+\i 6\i0  (keypad) - step forward 1 frame at a time (while held)\par
+\par
+\i 5\i0  (keypad) - freeze/un-freeze\par
+\par
+\i 8\i0  (keypad) - press once, goes into slow-motion, keep pressing and slow-motion gets slower.\par
+\par
+\i 7\i0  (keypad) - goes back to start of replay\par
+\par
+\i 1\i0  (keypad) - goes to end of replay\par
+\par
+%COMPONENT%
+GPLForeverCCM Help
+%OVERVIEW%
+Opens Helpfile\par
+%DESCRIPTION%
+Show this help file.\par
+%COMPONENT%
+Import GPL camfile
+%OVERVIEW%
+Import GPL \cf13\ul\protect cam file\cf0\ulnone\protect0  \par
+%DESCRIPTION%
+Import the values from a \cf13\ul\protect cam file\cf0\ulnone\protect0  into the current camera set. The values are overwritten but the images remain. \par
+\par
+This function is mostly used when creating a new car camera set. A new car camera sets starts with creating a .cam file with a .cam file editor. If the .cam file is finished it is imported with this function into the newly created car camera set. After that, screenshots can be added.\par
+\par
+\par
+%JUMP_LINKS%
+.cam file	.cam file
+cam file	cam file
+%COMPONENT%
+Making Movies
+%OVERVIEW%
+ Making movies\par
+%DESCRIPTION%
+ The CCM is not able to make movies on its own. For that a separate program like GPL2AVI or Movie Studio 2 is needed. \par
+\par
+Such kind of programs are grabbing GPL frames. GPL always have 36 frames in a second. At real time it depends on the machine you are using if GPL can display them all 36 each second. When creating movies we do not have to deal with that problem. GPL is executed frame by frame and each frame is grabbed seperately. Of course of the single stepping GPL replay is progressing very slowly. If CCM would continue on full 36 fps speed, the movies would look really bad and jumpy because of the relative fast camera movement. To overcome this problem, CCM also has a single step mode. Everytime a frame is grabbed, CCM is advanced only one frame just like GPL. The single step mode can be toggled with the \i S\i0  key. To know wich mode is selected, this mode is shown in the status line in the upper left corner of the GPL screen.\par
+\par
+The following list gives a step by step example what to do to create a movie. The grabber used in this list is GPL2AVI:\par
+\pard\li200\sa80 1.\tab Start the CCM\par
+2.\tab Start GPL2AVI and run GPL from there.\par
+3.\tab Load replay and go to a part where you want to create the movie.\par
+4. \tab Put GPL in pause mode\par
+5.\tab Select the pit camera and fly to the desired location\par
+6.\tab NOW PRESS THE S KEY (don't forget it), you can not move your camera anymore now\par
+7.\tab Press F4 to start grabbing and GPL and CCM are going to run in single step mode\par
+8.\tab Now you can fly again but you will see it advances slowly. You have to take in account that every thing you have to, you do in slow motion. It definitely needs some training but you will manage anyhow. Don't hurry it.\par
+9.\tab When you finished, you press F8 to stop GPL2AVI grabbing frames.\par
+10.    You can press \i S\i0  again to get back the real time camera control. You can exit or go to the next clip now.\par
+\par
+\pard\sa80 A very special kind of clips can be made together with GPL2AVI. Especially for the CCM, in GPL2AVI the matrix mode is added. This mode is used when GPL is paused. Starting matrix mode will advance CCM frame by frame but GPL is kept in pause mode. The result is that you can make a movie of a camera flying in a frozen GPL world.\par
+%COMPONENT%
+Mouse Control
+%OVERVIEW%
+Controlling cameras with the mouse and the keyboard.\par
+%DESCRIPTION%
+Mouse control is possible on the Roll Bar camera and the Pit Camera. It is started for the Roll Bar camera with the \i Insert \i0 key and for the Pit camera with the \i Delete \i0 key. The correlating camera view must be chosen by the normal GPL controls.  Once the mouse control is active it is possible to switch camera sets with the \i PgUp/PgDn\i0  keys while the mouse control stays active. The mouse control is ended when a different mode is selected. \par
+\par
+The camera is always moved in the x/y plane, z is controlled seperately by the \i Left and Right\i0  mouse buttons. The Roll Bar and Pit camera control can be controlled either in Fly mode or Look mode. Fly mode means that the forward/backward movement is controlled by the mouse, pitch is controlled with \i Up/Down\i0  keys. Look mode is the opposite, pitch movement is controlled by the mouse,  forward/backward is controlled with up/down keys. Banking of camera can be done by \i D/Z\i0  keys or automatically together with turning left and right. First time flying will be hard it needs a little bit of training. When the mouse pointer is centered to the screen the movement of the camera is stopped. Moving the pointer up in fly mode, moves the camera forward and moving the pointer down moves it backward. Moving the pointer up/down in look mode, changes the pitch. Moving the pointer to the left or right lets the camera turn left and right around the z-axis. The zoom is controlled by  \i +/-\i0  keys. The camera can also be sidewards in the x/y plane (strafe), this is done by the \i Left/Right\i0  keys. For a full overview read \cf13\ul\protect CCM key assignments\cf0\ulnone\protect0  .\par
+\par
+Moving the camera with the mouse is different compared to the most common games. The reason why an alternative method is chosen is because it gives a lot more smooth way of control.\par
+%JUMP_LINKS%
+CCM key assignments	CCM key assignments
+%COMPONENT%
+Overview
+%OVERVIEW%
+Overview of Car Camera Manager\par
+%DESCRIPTION%
+The Camera Control Master extends the replay capabilities of GPL by adding direct control to the replay cameras. The former version, the Car Camera Manager, already offered capabilities to switch car camera sets during replay. Now the Camera Control Master makes it possible to control the roll bar and pit camera by mouse and by script. \par
+\par
+So the CCM was created in first place to easily manage and switch Grand Prix Legends car camera files. The car camera files, which has an extension "\cf13\ul\protect . cam\cf0\ulnone\protect0  " are located in the cars/cars67/<car> directory. For each type of car a separate file exists with a different name in a different directory. Because of that, switching between camera files is not an easy job. \par
+\par
+Related to car camera sets, CCM offers the following:\par
+1. Keep all camera views in one file.\par
+2. Add screenshots to each camera view.\par
+3. Copy and paste camera views between multiple sets.\par
+4. Distribute camera set to each car directory and file by one click.\par
+5. Switch camera sets directly during replay without distribution of files (introduced in V2.0).\par
+\par
+Besides to the camera control functionality, in V3 the Camera Control Master is upgraded now to have more .cmf files opened simultaneous.\par
+\par
+Related to direct camera control, CCM offers the following:\par
+1. Mouse and keyboard control on roll bar and pit camera\par
+2. Script language to create preprogrammed camera effects to execute during replay for the roll bar and pit camera.\par
+3. Single step mode to synchronize smoothly with movie grabbers like GPL2AVI.\par
+4. Saving roll bar and pit camera positions in a text window by hotkey. When applied on the pit cam it is useful in combination with track camera editors.\par
+\par
+%JUMP_LINKS%
+. cam	cam file
+%COMPONENT%
+Preferences
+%OVERVIEW%
+Preferences dialog\par
+%DESCRIPTION%
+In this dialog the pathnames of the applications available on the tool bar can be entered here. Entering the pathname to gpl.exe is mandatory.\par
+%COMPONENT%
+Save camera position
+%OVERVIEW%
+ Saving car camera positions to a file.\par
+%DESCRIPTION%
+Creating car camera files and track cameras are now easier using the CCM. It is possible to save the current position of the Pit camera with the \i P\i0  key and the postion of the Roll Bar camera with the \i R\i0  key. When one of these keys are pressed the position is saved in a text window. From there it can be used in every editor you want. \par
+\par
+The saved camera position window can be shown by the "Extra/Show Saved Positions" menu.\par
+%COMPONENT%
+Set Copy
+%OVERVIEW%
+Copies a camera set or effect.\par
+%DESCRIPTION%
+Copies a camera set or effect to the clipboard.\par
+%COMPONENT%
+Set Cut
+%OVERVIEW%
+Cuts a camera set or effect.\par
+%DESCRIPTION%
+Cuts a camera set or effect to the clipboard\par
+%COMPONENT%
+Set Delete
+%OVERVIEW%
+Delete camera set or effect\par
+%DESCRIPTION%
+Deletes the current camera set or effect\par
+%COMPONENT%
+Set Distribute
+%OVERVIEW%
+Distribute car camera set\par
+%DESCRIPTION%
+Set Distribution is the classic way to switch to a different car camera set. When the \i distribute\i0  button is pressed, the current camera set is distributed in .cam file format into the cars67 directory of GPL for each car. \par
+%COMPONENT%
+Set New
+%OVERVIEW%
+New camera set or effect\par
+%DESCRIPTION%
+Adds a new car camera set or effect to the list.\par
+%COMPONENT%
+Set Paste
+%OVERVIEW%
+Paste a camera set or effect.\par
+%DESCRIPTION%
+Paste a camera set or effect from the clipboard to the list.\par
+%COMPONENT%
+Set Properties
+%OVERVIEW%
+ Properties of a camera set.\par
+%DESCRIPTION%
+The properties of a car camera set consist of a HotKey and a Author Comment.\par
+The Author Comment is just an area of plain text where the Authors name can be written together with additional notes.\par
+The HotKey is the key to use during a GPL replay to directly switch to a car camera set.\par
+\pard It is possible to use CTRL and SHIFT keys to define hotkeys but be aware that there are also GPL and CCM built-in keys. See  \par
+\par
+\par
+%JUMP_LINKS%
+Direct Control	Direct Control
+%COMPONENT%
+Set Rename
+%OVERVIEW%
+Rename camera set or effect\par
+%DESCRIPTION%
+Rename the current camera set or effect\par
+%COMPONENT%
+Show Saved Positions
+%OVERVIEW%
+Shows the window with saved positions.\par
+%DESCRIPTION%
+Shows the window with saved positions. See also: \cf13\ul\protect Save camera position\cf0\ulnone\protect0  \par
+%JUMP_LINKS%
+Save camera position	Save camera position
+%DELETED%
+Camera
+Editing
+NewComponent1
+%CONTENTS%
+0,General
+1,Overview	Overview
+1,Set Properties	Set Properties
+1,Direct Control	Direct Control
+1,Mouse Control	Mouse Control
+1,Effects	Effects
+1,Save camera position	Save camera position
+1,Making Movies	Making Movies
+1,GPL key assignments	GPL key assignments
+1,CCM key assignments	CCM key assignments
+1,cmf file	cmf file
+1,cam file	cam file
+0,Menus
+1,File
+2,File New	File New
+2,File Open	File Open
+2,File Close	File Close
+2,File Save	File Save
+2,File Save As	File Save As
+2,Import GPL camfile	Import GPL camfile
+2,Export GPL camfile	Export GPL camfile
+2,Exit	Exit
+1,Set
+2,Set New	Set New
+2,Set Delete	Set Delete
+2,Set Rename	Set Rename
+2,Set Cut	Set Cut
+2,Set Copy	Set Copy
+2,Set Paste	Set Paste
+2,Set Distribute	Set Distribute
+1,Camera
+2,Camera Copy	Camera Copy
+2,Camera Paste	Camera Paste
+2,Camera Properties	Camera Properties
+1,Extra
+2,Show Saved Positions	Show Saved Positions
+2,Preferences	Preferences
+1,Help
+2,GPLForeverCCM Help	GPLForeverCCM Help
+2,Getting Started Dialog	Getting Started Dialog
+2,About	About

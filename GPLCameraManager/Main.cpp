@@ -1,0 +1,1172 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+
+#include "Main.h"
+#include "Name.h"
+#include "About.h"
+#include "Comment.h"
+#include "Options.h"
+#include "Page.h"
+#include "SavedPositions.h"
+#include <IniFiles.hpp>
+#include <FileCtrl.hpp>
+#include <ClipBrd.hpp>
+
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma link "GPLCarCamera"
+#pragma link "pvlUrl"
+#pragma resource "*.dfm"
+TfrmMain *frmMain;
+//---------------------------------------------------------------------------
+__fastcall TfrmMain::TfrmMain(TComponent* Owner)
+    : TForm(Owner),
+    a_hhk(0),
+    a_replaceAll(false),
+    a_setModeAllowed(false),
+    a_newFileCounter(0),
+    a_setList(0),
+    a_effectList(0),
+    a_activeSet(0),
+    a_activeEffect(0),
+    a_resetdone(false)
+{
+    gplInfo.hProcess = 0;
+    gplInfo.hThread = 0;
+    gplInfo.dwProcessId = 0;
+    gplInfo.dwThreadId = 0;
+
+}
+
+//---------------------------------------------------------------------------
+void RegisterClassesWithStreamingSystem(void)
+{
+  // Make sure that as part of the startup
+  // code our streaming classes are registered
+  // with the streaming system.
+
+  #pragma startup RegisterClassesWithStreamingSystem
+
+  Classes::RegisterClass(__classid(TGPLCarCameraSet));
+  Classes::RegisterClass(__classid(TGPLCarCamera));
+}
+
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::FormCreate(TObject *Sender)
+{
+    a_setList = new TList;
+    a_effectList = new TList;
+
+    TIniFile *ini;
+    ini = new TIniFile(
+       ChangeFileExt( Application->ExeName, ".INI" ) );
+    Top     =  ini->ReadInteger( "MainForm", "Top", 100 );
+    Left    =  ini->ReadInteger( "MainForm", "Left", 100 );
+    chkHotkeyDirectControl->Checked  =  ini->ReadBool( "MainForm", "DirectControl", 1 );
+    tbrSpeed->Position  =  ini->ReadInteger( "MainForm", "Speed", 50 );
+    tbrSmooth->Position  =  ini->ReadInteger( "MainForm", "Smooth", 94 );
+    chkDefaultLookMode->Checked  =  ini->ReadBool( "MainForm", "DefaultLookMode", 0 );
+    chkDefaultBankMode->Checked  =  ini->ReadBool( "MainForm", "DefaultBankMode", 0 );
+    a_firstRun  =  ini->ReadBool( "General", "FirstRun", true );
+    a_firstNR2003  =  ini->ReadBool( "General", "FirstNR2003", true );
+    cbxGameSelector->ItemIndex = ini->ReadInteger( "General", "GameSelector", 0 );
+    chkGPLInWindow->Checked = ini->ReadBool( "General", "GPLRunInWindow", 0 );
+    delete ini;
+
+    DecimalSeparator = '.';
+
+    dlgOpenCmf->InitialDir = ExtractFilePath(Application->ExeName);
+    dlgOpenCam->InitialDir = ExtractFilePath(Application->ExeName);
+    dlgSaveCmf->InitialDir = ExtractFilePath(Application->ExeName);
+    dlgSaveCam->InitialDir = ExtractFilePath(Application->ExeName);
+
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::actExitExecute(TObject *Sender)
+{
+    Close();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actPreferencesExecute(TObject *Sender)
+{
+    dlgOptions->ShowModal();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actAboutExecute(TObject *Sender)
+{
+    dlgAbout->ShowModal();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::FormCloseQuery(TObject *Sender, bool &CanClose)
+{
+    // first save wich files are open
+    writeCmfFilesToIni();
+
+    for (int i = 0; i < pagMain->PageCount; i++)
+    {
+        TTabSheet *sheet = pagMain->Pages[i];
+        TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+        if (frmPage)
+        {
+            if (frmPage->closeFile())
+            {
+                frmPage->pnlMain->Parent = frmPage;
+                delete frmPage;
+//                delete sheet;
+            }
+            else
+            {
+                CanClose = false;
+                return;
+            }
+        }
+    }
+
+    CanClose = true;
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actHelpExecute(TObject *Sender)
+{
+    Application->HelpCommand(HELP_FINDER, 0);
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::FormShow(TObject *Sender)
+{
+    Application->HelpFile = ExtractFilePath(Application->ExeName) + "GPLForeverCCM.hlp";
+
+    if (a_firstRun)
+    {
+         actGettingStartedExecute(Sender);
+         a_firstRun = false;
+    }
+    if (a_firstNR2003)
+    {
+         actNR2003NotesExecute(Sender);
+         a_firstNR2003 = false;
+    }
+
+    // set the mode according to direct control checkbox
+    a_setModeAllowed = true;
+    setMode(Sender);
+
+    // create the direct control thread
+    a_directControl = new DirectControl();
+
+    // force the correct game selection
+    cbxGameSelectorChange(this);
+
+    readCmfFilesFromIni();
+
+    // update values
+    tbrSpeedChange(this);
+    tbrSmoothChange(this);
+
+    Application->OnActivate = FormActivate;
+    Application->OnDeactivate = FormDeactivate;
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::FormDestroy(TObject *Sender)
+{
+    TIniFile *ini;
+    ini = new TIniFile(ChangeFileExt( Application->ExeName, ".INI" ) );
+    ini->WriteInteger( "MainForm", "Top", Top );
+    ini->WriteInteger( "MainForm", "Left", Left );
+    ini->WriteBool( "MainForm", "DirectControl", chkHotkeyDirectControl->Checked );
+    ini->WriteInteger( "MainForm", "Speed", tbrSpeed->Position );
+    ini->WriteInteger( "MainForm", "Smooth", tbrSmooth->Position );
+    ini->WriteInteger( "MainForm", "DefaultLookMode", chkDefaultLookMode->Checked );
+    ini->WriteInteger( "MainForm", "DefaultBankMode", chkDefaultBankMode->Checked );
+    ini->WriteBool( "General", "FirstRun", a_firstRun );
+    ini->WriteBool( "General", "FirstNR2003", a_firstNR2003 );
+    ini->WriteInteger( "General", "GameSelector", cbxGameSelector->ItemIndex );
+    ini->WriteBool( "General", "GPLRunInWindow", chkGPLInWindow->Checked );
+
+    delete ini;
+
+    delete a_setList;
+    delete a_effectList;
+}
+
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::actGettingStartedExecute(TObject *Sender)
+{
+    MessageDlg("This is the first time you run GPLForeverCCM V3.X, please read the following:\n\n\
+The GPLForeverCCM was originally intended to organize car camera sets in one library \
+and to easily distribute them as .cam files to the cars\\cars67 directory of GPL.\n\n\
+In version 2.0 the direct control feature is introduced. \
+With this feature it is possible to switch camera sets during replay without the need to distribute .cam files.\n\n\
+In version 3.0 the direct control is extended with camera control by mouse and effect.\n\n\
+After you press OK, you first have to enter the GPL path first, then GPLForeverCCM is started. Open the file default.cmf, it contains 3 car camera sets by default and a list of amazing effects created by Niko Stenberg. \
+Please first read the helpfile, at least the Direct Control and related chapters Mouse Control and Effects. Don't start creating movies immediatly but first make yourself familiar with all the controls. It needs some training but you will be able to fly around in a well controlled way when you give it some time.\n\n\
+This dialog can be reshown from the 'Help/Getting Started Dialog' menu option.\n\n\
+Success!!", mtInformation, TMsgDlgButtons() << mbOK, 0);
+
+    dlgOptions->pagKeys->TabVisible = false;
+    dlgOptions->ShowModal();
+//    dlgOptions->pagKeys->TabVisible = true;
+}
+
+
+//---------------------------------------------------------------------------
+TGPLCarCameraSet *__fastcall TfrmMain::getActiveCamSet()
+{
+    TGPLCarCameraSet *camSet = 0;
+    if (!a_directControl->isAttachedToGPL())
+        a_activeSet = 0;
+
+    if (a_setList->Count == 0)
+        a_activeSet = 0;
+    else
+    {
+        if (a_activeSet >= a_setList->Count)
+           a_activeSet = a_setList->Count - 1;
+        if (a_activeSet < 0)
+           a_activeSet = 0;
+        camSet = castCamSet(a_setList->Items[a_activeSet]);
+    }
+    return camSet;
+}
+
+//---------------------------------------------------------------------------
+TGPLCarCameraSet *__fastcall TfrmMain::getActiveEffect()
+{
+    TGPLCarCameraSet *camSet = 0;
+    if (!a_directControl->isAttachedToGPL())
+        a_activeEffect = 0;
+
+    if (a_effectList->Count == 0)
+        a_activeEffect = 0;
+    else
+    {
+        if (a_activeEffect >= a_effectList->Count)
+           a_activeEffect = a_effectList->Count - 1;
+        if (a_activeEffect < 0)
+           a_activeEffect = 0;
+        camSet = castCamSet(a_effectList->Items[a_activeEffect]);
+    }
+    return camSet;
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::evaluateKey(WORD pressedKey)
+{
+    // check for direct control enabled
+    if (!chkHotkeyDirectControl->Checked && Application->Active)
+        return;
+
+    if (!a_directControl->isAttachedToGPL())
+    {
+        // reset desired settings
+        if (!a_resetdone)
+        {
+            a_directControl->acceptSettings(true);
+            a_resetdone = true;
+        }
+    }
+    else
+        a_resetdone = false;
+
+
+    Word key;
+    TShiftState shift;
+
+    TShiftState shiftValue = KeyDataToShiftState(pressedKey);
+    Word keyValue = pressedKey & 0xff;
+
+ //   Edit1->Text = IntToStr(keyValue);
+
+    // check if "esc" key is pressed
+    ShortCutToKey(dlgOptions->hkEscape->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        a_directControl->acceptSettings(true);
+        return;
+    }
+
+    // check if "save pit cam" key is pressed
+    ShortCutToKey(dlgOptions->hkSavePitCam->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        a_directControl->storePitCam();
+        return;
+    }
+
+    // check if "save roll bar cam" key is pressed
+    ShortCutToKey(dlgOptions->hkSaveRollBarCam->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        a_directControl->storeRollBarCam();
+        return;
+    }
+
+    // check if "pit cam" key is pressed
+    ShortCutToKey(dlgOptions->hkEscape->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        a_directControl->acceptSettings(true);
+        return;
+    }
+
+    // check if "static" key is pressed
+    ShortCutToKey(dlgOptions->hkStatic->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        a_directControl->setDesViewMode(VmStatic);
+        a_directControl->acceptSettings();
+        return;
+    }
+
+    // check if "reset" key is pressed
+    ShortCutToKey(dlgOptions->hkReset->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        a_directControl->resetCarCam();
+        a_directControl->resetPitCam();
+        a_directControl->acceptSettings();
+        return;
+    }
+
+    // check if "next camset" key is pressed
+    ShortCutToKey(dlgOptions->hkNextSet->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        if (a_setList->Count > 0)
+        {
+            a_activeSet++;
+            if (a_activeSet >= a_setList->Count)
+               a_activeSet = 0;
+            a_directControl->setDesCarCameraSet(getActiveCamSet()->Caption, getActiveCamSet());
+            a_directControl->acceptSettings();
+        }
+        return;
+    }
+
+    // check if "prev camset" key is pressed
+    ShortCutToKey(dlgOptions->hkPrevSet->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        if (a_setList->Count > 0)
+        {
+            a_activeSet--;
+            if (a_activeSet < 0)
+               a_activeSet = a_setList->Count - 1;
+            a_directControl->setDesCarCameraSet(getActiveCamSet()->Caption, getActiveCamSet());
+            a_directControl->acceptSettings();
+        }
+        return;
+    }
+
+    // check if "next effect" key is pressed
+    ShortCutToKey(dlgOptions->hkNextEffect->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        if (a_effectList->Count > 0)
+        {
+            a_activeEffect++;
+            if (a_activeEffect >= a_effectList->Count)
+               a_activeEffect = 0;
+            a_directControl->setDesEffect(getActiveEffect()->Caption, getActiveEffect()->getEffect());
+            a_directControl->acceptSettings();
+        }
+        return;
+    }
+
+    // check if "prev effect" key is pressed
+    ShortCutToKey(dlgOptions->hkPrevEffect->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        if (a_effectList->Count > 0)
+        {
+            a_activeEffect--;
+            if (a_activeEffect < 0)
+               a_activeEffect = a_effectList->Count - 1;
+            a_directControl->setDesEffect(getActiveEffect()->Caption, getActiveEffect()->getEffect());
+            a_directControl->acceptSettings();
+        }
+        return;
+    }
+
+    // check if "effect roll bar" key is pressed
+    ShortCutToKey(dlgOptions->hkEffectRollBar->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        a_directControl->setDesEffect(getActiveEffect()->Caption, getActiveEffect()->getEffect());
+        a_directControl->setDesViewMode(VmEffectRollBar);
+        a_directControl->acceptSettings();
+        return;
+    }
+
+    // check if "effect pitcam" key is pressed
+    ShortCutToKey(dlgOptions->hkEffectPitCam->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        a_directControl->setDesEffect(getActiveEffect()->Caption, getActiveEffect()->getEffect());
+        a_directControl->setDesViewMode(VmEffectPitCam);
+        a_directControl->acceptSettings();
+        return;
+    }
+
+    // check if "mouse roll bar" key is pressed
+    ShortCutToKey(dlgOptions->hkMouseRollBar->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        a_directControl->setDesViewMode(VmMouseRollBar);
+        a_directControl->acceptSettings();
+        return;
+    }
+
+    // check if "mouse pitcam" key is pressed
+    ShortCutToKey(dlgOptions->hkMousePitCam->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        a_directControl->setDesViewMode(VmMousePitCam);
+        a_directControl->acceptSettings();
+        return;
+    }
+
+    // check if "single step" key is pressed (gpl only)
+    ShortCutToKey(dlgOptions->hkSingleStep1->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue && cbxGameSelector->ItemIndex == 0)
+    {
+        a_directControl->toggleSingleStep();
+        return;
+    }
+
+    // check if "single step" key is pressed (gpl and nascar)
+    ShortCutToKey(dlgOptions->hkSingleStep2->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        a_directControl->toggleSingleStep();
+        return;
+    }
+
+    // check if "smooth down" key is pressed
+    ShortCutToKey(dlgOptions->hkSmoothDown->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        tbrSmooth->Position = tbrSmooth->Position - 1;
+        return;
+    }
+
+    // check if "smooth up" key is pressed
+    ShortCutToKey(dlgOptions->hkSmoothUp->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        tbrSmooth->Position = tbrSmooth->Position + 1;
+        return;
+    }
+
+    // check if "speed down" key is pressed
+    ShortCutToKey(dlgOptions->hkSpeedDown->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        tbrSpeed->Position = tbrSpeed->Position - 1;
+        return;
+    }
+
+    // check if "speed up" key is pressed
+    ShortCutToKey(dlgOptions->hkSpeedUp->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        tbrSpeed->Position = tbrSpeed->Position + 1;
+        return;
+    }
+
+    // check if "look mode" key is pressed
+    ShortCutToKey(dlgOptions->hkLookMode->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        a_directControl->toggleLookMode();
+        return;
+    }
+
+    // check if "bank mode" key is pressed
+    ShortCutToKey(dlgOptions->hkBankMode->HotKey, key, shift);
+    if (key == keyValue && shift == shiftValue)
+    {
+        a_directControl->toggleBankMode();
+        return;
+    }
+
+    // check if "single step" key is pressed
+    if (keyValue == 102 || keyValue == 220)
+    {
+        a_directControl->stepPressed();
+        return;
+    }
+
+    // cycle through car sets to find hotkey
+    for (int i = 0; a_setList && i < a_setList->Count; i++)
+    {
+        TGPLCarCameraSet *camSet = castCamSet(a_setList->Items[i]);
+        ShortCutToKey(camSet->ActivationKey, key, shift);
+        if (key == keyValue && shift == shiftValue)
+        {
+            a_activeSet = i;
+
+            a_directControl->setDesCarCameraSet(getActiveCamSet()->Caption, getActiveCamSet());
+            a_directControl->acceptSettings();
+            break;
+        }
+    }
+}
+
+//---------------------------------------------------------------------------
+LRESULT CALLBACK JournalRecordProc(
+    int code,	// hook code
+    WPARAM wParam,	// undefined
+    LPARAM lParam 	// address of message being processed
+   )
+{
+    EVENTMSG *msg = (EVENTMSG *)lParam;
+
+    if (msg->message == WM_KEYDOWN)
+    {
+      frmMain->evaluateKey(msg->paramL);
+    }
+    if (msg->message == WM_RBUTTONDOWN)
+    {
+        frmMain->getDirectControl()->setMouseRightDown(true);
+    }
+    if (msg->message == WM_RBUTTONUP)
+    {
+        frmMain->getDirectControl()->setMouseRightDown(false);
+    }
+    if (msg->message == WM_LBUTTONDOWN)
+    {
+        frmMain->getDirectControl()->setMouseLeftDown(true);
+    }
+    if (msg->message == WM_LBUTTONUP)
+    {
+        frmMain->getDirectControl()->setMouseLeftDown(false);
+    }
+
+    return 1;
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::setMode(TObject *Sender)
+{
+    if (!a_setModeAllowed)
+        return;
+
+    if (chkHotkeyDirectControl->Checked)
+    {
+        if (!a_hhk)
+        {
+            a_hhk = SetWindowsHookEx(
+                WH_JOURNALRECORD	,	// type of hook to install
+                (HOOKPROC)JournalRecordProc,	// address of hook procedure
+                HInstance,	// handle of application instance
+                0 	// identity of thread to install hook for
+            );
+        }
+    }
+    else
+    {
+        if (a_hhk)
+        {
+           UnhookWindowsHookEx(
+              a_hhk 	// handle of hook procedure to remove
+           );
+           a_hhk = 0;
+        }
+    }
+
+}
+
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::FormClose(TObject *Sender, TCloseAction &Action)
+{
+    a_setModeAllowed = false;
+    if (a_hhk)
+    {
+       UnhookWindowsHookEx(
+          a_hhk 	// handle of hook procedure to remove
+       );
+       a_hhk = 0;
+    }
+
+    // terminate the direct control thread
+    if (a_directControl)
+    {
+        a_directControl->Terminate();
+        a_directControl->Suspended = false;
+        // give it some time
+        Sleep(100);
+    }
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actNewExecute(TObject *Sender)
+{
+    try
+    {
+        TfrmPage *frmPage = new TfrmPage(this);
+
+        AnsiString newName = "Camsets" + IntToStr(a_newFileCounter++) + ".cmf";
+        frmPage->newFile(newName);
+
+        TTabSheet *sheet = new TTabSheet(this);
+        frmPage->pnlMain->Parent = sheet;
+        sheet->Caption = newName;
+        sheet->PageControl = pagMain;
+        pagMain->ActivePage = sheet;
+        pagMainChange(this);
+
+    }
+    catch(...)
+    {
+    }
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actOpenExecute(TObject *Sender)
+{
+    if (dlgOpenCmf->Execute())
+    {
+        try
+        {
+            TfrmPage *frmPage = new TfrmPage(this);
+            frmPage->openFile(dlgOpenCmf->FileName);
+
+            TTabSheet *sheet = new TTabSheet(this);
+            frmPage->pnlMain->Parent = sheet;
+            sheet->Caption = ExtractFileName(dlgOpenCmf->FileName);
+            sheet->PageControl = pagMain;
+            pagMain->ActivePage = sheet;
+            pagMainChange(this);
+        }
+        catch(...)
+        {
+        }
+    }
+}
+
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::importGPLCamfileToFile(TGPLCarCameraSet *camSet, String Name)
+{
+    TFileStream *file = new TFileStream( Name, fmOpenRead );
+    file->Read(&a_cameraFile,sizeof(a_cameraFile));
+    delete file;
+
+    // copy data
+    camSet->setValues(&a_cameraFile.carCameraValuesList);
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::exportGPLCamfileToFile(TGPLCarCameraSet *camSet, String Name)
+{
+    TFileStream *file = new TFileStream( Name, fmCreate );
+
+    // copy data
+    camSet->getValues(&a_cameraFile.carCameraValuesList);
+    strncpy(a_cameraFile.sectionType, "MACC", 4);
+    a_cameraFile.dataSize = 216;
+    file->Write(&a_cameraFile,sizeof(a_cameraFile));
+
+    delete file;
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actSaveExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->fileSave();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actSaveAsExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+    {
+        frmPage->fileSaveAs();
+        sheet->Caption = ExtractFileName(frmPage->getFileName());
+    }
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actCloseExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+    {
+        if (frmPage->closeFile())
+        {
+            delete frmPage;
+            delete sheet;
+        }
+    }
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actNewCamSetExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->newCamSet();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actDeleteCamSetExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->deleteCamSet();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actRenameCamSetExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->renameCamSet();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actCopyCamSetExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->copyCamSet();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actCutCamSetExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->cutCamSet();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actPasteCamSetExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->pasteCamSet();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actImportGPLCamfileExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->actImportGPLCamfileExecute(this);
+}
+
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::actExportGPLCamfileExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->actExportGPLCamfileExecute(this);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::Button1Click(TObject *Sender)
+{
+/*
+ RECT rect;
+
+ ::GetClientRect(
+    Handle,	// handle of window
+    &rect 	// address of structure for client coordinates
+   );
+   frmMain->Memo1->Lines->Add(IntToStr(rect.left));
+   frmMain->Memo1->Lines->Add(IntToStr(rect.top));
+   frmMain->Memo1->Lines->Add(IntToStr(rect.right));
+   frmMain->Memo1->Lines->Add(IntToStr(rect.bottom));
+
+ ::GetClientOrigin(
+    Handle,	// handle of window
+    &rect 	// address of structure for client coordinates
+   );
+   frmMain->Memo1->Lines->Add(IntToStr(rect.left));
+   frmMain->Memo1->Lines->Add(IntToStr(rect.top));
+ */
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actCopyCameraExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->copyCamera();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actPasteCameraExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->pasteCamera();
+
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actPropertiesCameraExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->propertiesCamera();
+}
+
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::actDistributeCamSetExecute(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->distributeCamSet();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::pagMainChange(TObject *Sender)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+    {
+        // read camera sets and effects
+        a_setList->Clear();
+        a_effectList->Clear();
+        for (int i=0; i < frmPage->treCameraSets->Items->Count; i++)
+        {
+            TGPLCarCameraSet *camSet = castCamSet(frmPage->treCameraSets->Items->Item[i]->Data);
+            if (camSet->Type == CstCarCamSet)
+                a_setList->Add(camSet);
+            else
+                a_effectList->Add(camSet);
+        }
+        a_activeSet = 0;
+        a_activeEffect = 0;
+        frmPage->updateCameraSetButtons();
+    }
+    else
+    {
+        actNewCamSet->Enabled = false;
+        actDeleteCamSet->Enabled = false;
+        actCopyCamSet->Enabled = false;
+        actCutCamSet->Enabled = false;
+        actPasteCamSet->Enabled = false;
+        actRenameCamSet->Enabled = false;
+        actImportGPLCamfile->Enabled = false;
+        actExportGPLCamfile->Enabled = false;
+        actDistributeCamSet->Enabled = false;
+    }
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::actGPLExecute(TObject *Sender)
+{
+    if (cbxGameSelector->ItemIndex == 1)
+    {
+        ShellExecute(Handle,"open",dlgOptions->edtNR2003Path->Text.c_str(),0,"",0);
+    }
+    else if (cbxGameSelector->ItemIndex == 2)
+    {
+        ShellExecute(Handle,"open",dlgOptions->edtGTPPath->Text.c_str(),0,"",0);
+    }
+    else
+    {
+        AnsiString cmd = "-ko\"0:rasterizer:fullScreen:" +
+                             IntToStr((int)(!chkGPLInWindow->Checked)) + "\"";
+        ShellExecute(Handle,"open",dlgOptions->edtGPLPath->Text.c_str(),cmd.c_str(),"",0);
+    }
+    setMode(this);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::LinkClick(TObject *Sender)
+{
+    AnsiString *pS = (AnsiString *)dynamic_cast<TLabel *>(Sender)->Tag;
+    if (pS && *pS!="")
+    {
+//        ShellExecute(Handle,"open",pS->c_str(),0,"",0);
+        pvlUrl->Url = *pS;
+        pvlUrl->Connect();
+    }
+}
+
+//---------------------------------------------------------------------------
+TGPLCarCameraSet * __fastcall TfrmMain::castCamSet(void *data)
+{
+    return dynamic_cast<TGPLCarCameraSet *>((TObject *)(data));
+}
+
+//---------------------------------------------------------------------------
+
+
+void __fastcall TfrmMain::actVideoCaptureExecute(TObject *Sender)
+{
+   if (dlgOptions->edtVideoCapturePath->Text != "")
+       ShellExecute(
+        Handle,	// handle to parent window
+        "open",	// pointer to string that specifies operation to perform
+        dlgOptions->edtVideoCapturePath->Text.c_str(),	// pointer to filename or folder name string
+        "",	// pointer to string that specifies executable-file parameters
+        ExtractFilePath(dlgOptions->edtVideoCapturePath->Text).c_str(),	// pointer to string that specifies default directory
+        SW_SHOW	 	// whether file is shown when opened
+       );
+   else
+   {
+       if (MessageDlg("There is no video capture application specified. Open the preferences dialog now ?", mtInformation, TMsgDlgButtons() << mbYes << mbNo, 0) == mrYes)
+           dlgOptions->ShowModal();
+   }
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::actMovieEditorExecute(TObject *Sender)
+{
+   if (dlgOptions->edtMovieEditorPath->Text != "")
+       ShellExecute(
+        Handle,	// handle to parent window
+        "open",	// pointer to string that specifies operation to perform
+        dlgOptions->edtMovieEditorPath->Text.c_str(),	// pointer to filename or folder name string
+        "",	// pointer to string that specifies executable-file parameters
+        ExtractFilePath(dlgOptions->edtMovieEditorPath->Text).c_str(),	// pointer to string that specifies default directory
+        SW_SHOW	 	// whether file is shown when opened
+       );
+   else
+   {
+       if (MessageDlg("There is no movie editor specified. Open the preferences dialog now ?", mtInformation, TMsgDlgButtons() << mbYes << mbNo, 0) == mrYes)
+           dlgOptions->ShowModal();
+   }
+}
+//---------------------------------------------------------------------------
+
+
+void __fastcall TfrmMain::actImageCaptureExecute(TObject *Sender)
+{
+   if (dlgOptions->edtImageCapturePath->Text != "")
+       ShellExecute(
+        Handle,	// handle to parent window
+        "open",	// pointer to string that specifies operation to perform
+        dlgOptions->edtImageCapturePath->Text.c_str(),	// pointer to filename or folder name string
+        "",	// pointer to string that specifies executable-file parameters
+        ExtractFilePath(dlgOptions->edtImageCapturePath->Text).c_str(),	// pointer to string that specifies default directory
+        SW_SHOW	 	// whether file is shown when opened
+       );
+   else
+   {
+       if (MessageDlg("There is no image capture application specified. Open the preferences dialog now ?", mtInformation, TMsgDlgButtons() << mbYes << mbNo, 0) == mrYes)
+           dlgOptions->ShowModal();
+   }
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::actReplayAnalyserExecute(TObject *Sender)
+{
+   if (dlgOptions->edtReplayAnalyserPath->Text != "")
+       ShellExecute(
+        Handle,	// handle to parent window
+        "open",	// pointer to string that specifies operation to perform
+        dlgOptions->edtReplayAnalyserPath->Text.c_str(),	// pointer to filename or folder name string
+        "",	// pointer to string that specifies executable-file parameters
+        ExtractFilePath(dlgOptions->edtReplayAnalyserPath->Text).c_str(),	// pointer to string that specifies default directory
+        SW_SHOW	 	// whether file is shown when opened
+       );
+   else
+   {
+       if (MessageDlg("There is no replay analyser specified. Open the preferences dialog now ?", mtInformation, TMsgDlgButtons() << mbYes << mbNo, 0) == mrYes)
+           dlgOptions->ShowModal();
+   }
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::imgLogoClick(TObject *Sender)
+{
+    LinkClick(Label1);
+}
+//---------------------------------------------------------------------------
+
+void TfrmMain::writeCmfFilesToIni()
+{
+    TIniFile *ini;
+    ini = new TIniFile(ChangeFileExt( Application->ExeName, ".INI" ) );
+    ini->EraseSection("Open Cmf Files");
+    for (int i = 0; i < pagMain->PageCount; i++)
+    {
+        TTabSheet *sheet = pagMain->Pages[i];
+        TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+        if (frmPage)
+           ini->WriteString( "Open Cmf Files", AnsiString("file") + IntToStr(i), frmPage->getFileName() );
+    }
+   delete ini;
+}
+
+//---------------------------------------------------------------------------
+void TfrmMain::readCmfFilesFromIni()
+{
+    TIniFile *ini;
+    ini = new TIniFile(ChangeFileExt( Application->ExeName, ".INI" ) );
+
+    TStringList *list = new TStringList;
+    ini->ReadSectionValues("Open Cmf Files", list);
+
+    for (int i=0; i < list->Count; i++)
+    {
+        TfrmPage *frmPage = new TfrmPage(this);
+        try
+        {
+            frmPage->openFile(list->Values[list->Names[i]]);
+
+            TTabSheet *sheet = new TTabSheet(this);
+            frmPage->pnlMain->Parent = sheet;
+            sheet->Caption = ExtractFileName(list->Values[list->Names[i]]);
+            sheet->PageControl = pagMain;
+            pagMain->ActivePage = sheet;
+            pagMainChange(this);
+            pagMain->ActivePage = tabMain;
+            pagMainChange(this);
+        }
+        catch(...)
+        {
+        }
+    }
+
+    delete ini;
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::actSavedPositionsExecute(TObject *Sender)
+{
+     if (!frmSavedPositions->Visible)
+         frmSavedPositions->Show();
+}
+
+//---------------------------------------------------------------------------
+void __fastcall TfrmMain::FormKeyUp(TObject *Sender, WORD &Key,
+      TShiftState Shift)
+{
+    TTabSheet *sheet = pagMain->ActivePage;
+    TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+    if (frmPage)
+        frmPage->FormKeyUp(Sender, Key, Shift);
+}
+
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::tbrSpeedChange(TObject *Sender)
+{
+    lblSpeedValue->Caption = IntToStr(tbrSpeed->Position) + "%";
+    if (a_directControl)
+        a_directControl->setSpeed(tbrSpeed->Position);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::tbrSmoothChange(TObject *Sender)
+{
+    lblSmoothValue->Caption = IntToStr(tbrSmooth->Position) + "%";
+    if (a_directControl)
+        a_directControl->setSmooth(tbrSmooth->Position);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::chkDefaultLookModeClick(TObject *Sender)
+{
+    if (a_directControl)
+        a_directControl->setLookMode(chkDefaultLookMode->Checked);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::chkDefaultBankModeClick(TObject *Sender)
+{
+    if (a_directControl)
+        a_directControl->setBankMode(chkDefaultBankMode->Checked);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::FormActivate(TObject *Sender)
+{
+//    if (a_directControl)
+//        a_directControl->detachFromGPL();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::FormDeactivate(TObject *Sender)
+{
+     pagMainChange(this);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::cbxGameSelectorChange(TObject *Sender)
+{
+    if (a_directControl)
+        a_directControl->detachFromGPL();
+
+    if (cbxGameSelector->ItemIndex == 1)
+    {
+        btnGPL->Caption = "Nascar Racing 2003";
+        if (a_directControl)
+            a_directControl->setNascarMode(true);
+    }
+    else if (cbxGameSelector->ItemIndex == 2)
+    {
+        btnGPL->Caption = "Redline GTP";
+        if (a_directControl)
+            a_directControl->setNascarMode(true);
+    }
+    else
+    {
+        btnGPL->Caption = "Grand Prix Legends";
+        if (a_directControl)
+            a_directControl->setNascarMode(false);
+    }
+    for (int i = 0; i < pagMain->PageCount; i++)
+    {
+        TTabSheet *sheet = pagMain->Pages[i];
+        TfrmPage *frmPage = dynamic_cast<TfrmPage *>(sheet->Controls[0]->Owner);
+        if (frmPage)
+        {
+            frmPage->setupScreen();
+        }
+    }
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmMain::actNR2003NotesExecute(TObject *Sender)
+{
+    MessageDlg("Important NR2003 Notes !!!\n\n\
+The helpfile is made for GPL. It can be used for NR2003 too but consider the following notes:\n\n\
+- to prevent key conflicts: D/F keys are now W/E, S key is now Q\n\
+- the 'pitcam' of gpl is 'pitcam1' on NR2003 (pitcam2 behaves normally)\n\
+- the 'rollbar' cam is 'roof' cam\n\
+- distribution of cam files is done for make_a.cam and pacecar.cam instead of GPL cars\n",
+    mtInformation, TMsgDlgButtons() << mbOK, 0);
+}
+//---------------------------------------------------------------------------
+
+
